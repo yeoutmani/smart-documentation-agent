@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from app.graph.workflow import build_graph
-import json
+from app.utils.stream_event import stream_event
+import time
 
 router = APIRouter()
 
@@ -15,37 +16,46 @@ async def chat_endpoint(payload: dict):
 
     async def stream():
 
-        async for event in graph.astream_events(
-            {"question": question},
-            version="v1"
-        ):
+        try:
 
-            # status propre
-            if event["event"] == "on_chain_start":
+            async for event in graph.astream_events(
+                {"question": question},
+                version="v1"
+            ):
 
-                name = event.get("name")
+                if event["event"] == "on_chain_start":
 
-                if name == "router":
-                    yield json.dumps({"type": "status", "content": "classifying"}) + "\n"
+                    name = event.get("name")
 
-                elif name == "rag":
-                    yield json.dumps({"type": "status", "content": "searching_docs"}) + "\n"
+                    meta = {
+                        "node": name,
+                        "timestamp": time.time()
+                    }
 
-                elif name == "generator":
-                    yield json.dumps({"type": "status", "content": "generating"}) + "\n"
+                    if name == "router":
+                        yield stream_event("status", "classifying", meta)
 
-            # tokens
-            elif event["event"] == "on_chat_model_stream":
+                    elif name == "rag":
+                        yield stream_event("status", "searching_docs", meta)
 
-                token = event["data"]["chunk"].content
+                    elif name == "generator":
+                        yield stream_event("status", "generating", meta)
 
-                if token:  # important
-                    yield json.dumps({
-                        "type": "token",
-                        "content": token
-                    }) + "\n"
+                elif event["event"] == "on_chat_model_stream":
 
-        yield json.dumps({"type": "end"}) + "\n"
+                    token = event["data"]["chunk"].content
+
+                    if token:
+                        yield stream_event(
+                            "token",
+                            token,
+                            {"node": "generator", "timestamp": time.time()}
+                        )
+
+            yield stream_event("end", meta={"timestamp": time.time()})
+
+        except Exception as e:
+            yield stream_event("error", str(e))
 
     return StreamingResponse(
         stream(),
