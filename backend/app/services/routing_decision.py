@@ -26,7 +26,6 @@ class RoutingDecision(BaseModel):
     )
 
     reason: Optional[str] = "N/A"
-
     # Validator personnalisé sur le champ "question"
     @field_validator("question")
     @classmethod
