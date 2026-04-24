@@ -1,10 +1,10 @@
 # Import de BaseModel → permet de créer des modèles typés + validation automatique
 # Field → permet d’ajouter des contraintes (min_length, description, etc.)
 # field_validator → permet de définir des règles de validation personnalisées
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 # Literal → permet de limiter une valeur à un ensemble précis (type sécurisé)
-from typing import Literal
+from typing import Literal, Optional
 
 
 # Définition du modèle de données pour le routing de l’agent
@@ -25,6 +25,8 @@ class RoutingDecision(BaseModel):
         description="User input question"
     )
 
+    reason: Optional[str] = "N/A"
+
     # Validator personnalisé sur le champ "question"
     @field_validator("question")
     @classmethod
@@ -42,15 +44,17 @@ class RoutingDecision(BaseModel):
         return value
 
     # Configuration du modèle
-    class Config:
+    class RoutingDecision(BaseModel):
 
         # Ajoute un exemple dans la documentation automatique (FastAPI / Swagger)
         # Très utile pour les développeurs et recruteurs
-        json_schema_extra = {
-            "example": {
-                "route": "search_docs",
-                "question": "How to configure the API?"
+        model_config = ConfigDict(
+            json_schema_extra={
+                "example": {
+                    "route": "search_docs",
+                    "question": "How to configure the API?"
+                }
             }
-        }
+        )
 
 # Ce modèle Pydantic impose un typage strict pour la décision de routage et nettoie les entrées utilisateur afin de garantir que seules des données valides et propres entrent dans le pipeline de l’agent.
