@@ -18,3 +18,15 @@ async def test_rag_node_with_mock(monkeypatch):
     print(f"\n[TEST] RAG Node Result: {result}")
 
     assert len(result["context"]) > 0
+
+@pytest.mark.asyncio
+async def test_rag_node_empty_question():
+    state = {
+        "question": "   "
+    }
+
+    result = await rag_node(state)
+
+    # doit retourner une liste vide
+    assert "context" in result
+    assert result["context"] == []
