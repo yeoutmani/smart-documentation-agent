@@ -53,4 +53,4 @@ class RoutingDecision(BaseModel):
             }
         }
 
-#Ce modèle Pydantic impose un typage strict pour la décision de routage et nettoie les entrées utilisateur afin de garantir que seules des données valides et propres entrent dans le pipeline de l’agent.
+# Ce modèle Pydantic impose un typage strict pour la décision de routage et nettoie les entrées utilisateur afin de garantir que seules des données valides et propres entrent dans le pipeline de l’agent.
