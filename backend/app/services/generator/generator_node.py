@@ -1,7 +1,14 @@
 from app.llm.generator_chain import generator_chain
 
 def format_context(context: list) -> str:
-    return "\n".join(context) if context else ""
+    if not context:
+        return ""
+
+    # gérer dict ou string
+    return "\n".join(
+        item["content"] if isinstance(item, dict) else item
+        for item in context
+    )
 
 async def generator_node(state: dict) -> dict:
     question = state.get("question", "")
